@@ -3,7 +3,6 @@ import torch.optim as optim
 
 import torch
 import json
-import numpy as np
 from tqdm import tqdm
 
 
@@ -19,6 +18,8 @@ class DocDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         encoding = self.encodings[index]
+        encoding += self.tokenizer.eos_token 
+        
         tokenized = self.tokenizer(encoding, return_tensors='pt', padding='max_length', truncation=True, max_length=512)
 
         input_ids = tokenized.input_ids.squeeze()
