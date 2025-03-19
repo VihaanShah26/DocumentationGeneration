@@ -1,19 +1,29 @@
-import pandas as pd 
+from datasets import load_dataset, DatasetDict
 import json
 
-file_path = "testData.json"
-df = pd.read_json(file_path, lines=True)
+dataset = load_dataset("Nan-Do/code-search-net-python", split='train')  
 
-lines = [] 
+train_testvalid = dataset.train_test_split(test_size=0.3, seed=42)
 
-file = open('ProcessedTestData.json', 'w')
+test_valid = train_testvalid['test'].train_test_split(test_size=1/3, seed=42)
 
-for rowNum in range(len(df['rows'][0])):
-    line = {'code_tokens': df['rows'][0][rowNum]['row']['code_tokens'], 
-            'docstring_tokens': df['rows'][0][rowNum]['row']['docstring_tokens'],
-            'code': df['rows'][0][rowNum]['row']['code'], 
-            'docstring': df['rows'][0][rowNum]['row']['docstring']}
-    json.dump(line, file)
-    file.write('\n')
+split_dataset = DatasetDict({
+    'train': train_testvalid['train'],
+    'validation': test_valid['train'],
+    'test': test_valid['test']
+})
 
-file.close()
+# Process each split
+for split in split_dataset:
+    with open(f'Processed{split.capitalize()}Data.json', 'w') as file:
+        for example in split_dataset[split]:
+
+            line = {
+                'code_tokens': example['code_tokens'],
+                'docstring_tokens': example['docstring_tokens'],
+                'code' : example['code'],
+                'docstring' : example['docstring']
+            }
+
+            json.dump(line, file)
+            file.write('\n')
